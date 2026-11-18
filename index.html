@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title id="pageTitle">Web App Portal</title>
+  <link id="pageFavicon" rel="icon" type="image/svg+xml" href="https://www.google.com/images/about/sheets-icon.svg">
+
+  <style>
+    /* ==========================================================================
+       ZETTBOS THEME - DARK GLASSMORPHISM & FULL VIEWPORT IFRAME WRAPPER
+       ========================================================================== */
+    :root {
+      --bg-deep: #0b0f19;
+      --bg-surface: #151b26;
+      --bg-glass: rgba(21, 27, 38, 0.82);
+      --neon-green: #00ffaa;
+      --neon-green-dim: rgba(0, 255, 170, 0.16);
+      --neon-green-glow: rgba(0, 255, 170, 0.45);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border-glass: rgba(255, 255, 255, 0.1);
+      --danger: #ff4d6d;
+      --warning: #ffb703;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      position: fixed;
+      inset: 0;
+    }
+
+    /* Container Utama Iframe Full Layar Tanpa Scrollbar Ganda */
+    .iframe-viewport {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-deep);
+      z-index: 1;
+    }
+
+    #gasAppFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background-color: transparent;
+    }
+
+    /* Preloader Overlay Zettbos Theme */
+    .preloader-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, var(--bg-surface) 0%, var(--bg-deep) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.45s ease;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .preloader-overlay.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      padding: 32px 28px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 255, 170, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .spinner-ring {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 255, 170, 0.15);
+      border-top-color: var(--neon-green);
+      animation: spinRing 0.9s linear infinite;
+      box-shadow: 0 0 18px var(--neon-green-dim);
+    }
+
+    @keyframes spinRing {
+      to { transform: rotate(360deg); }
+    }
+
+    .loader-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      color: var(--text-main);
+    }
+
+    .loader-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .btn-skip-loader {
+      margin-top: 6px;
+      background: transparent;
+      color: var(--neon-green);
+      border: 1px solid rgba(0, 255, 170, 0.35);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-skip-loader:hover {
+      background: var(--neon-green-dim);
+      box-shadow: 0 0 12px var(--neon-green-glow);
+      transform: translateY(-1px);
+    }
+
+    /* Offline / Connection Status Banner */
+    .network-banner {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120%);
+      background: rgba(255, 77, 109, 0.92);
+      backdrop-filter: blur(10px);
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .network-banner.is-visible {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Floating Quick Action Dock (Pojok Kanan Bawah - Minim & Tidak Mengganggu UI Utama) */
+    .floating-dock {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dock-menu {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-glass);
+      padding: 5px;
+      border-radius: 999px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      transform: translateX(15px) scale(0.95);
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .floating-dock.is-expanded .dock-menu {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .dock-btn, .dock-trigger {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border-glass);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .dock-trigger {
+      background: rgba(21, 27, 38, 0.65);
+      backdrop-filter: blur(10px);
+      border-color: rgba(0, 255, 170, 0.35);
+      color: var(--neon-green);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+      opacity: 0.45;
+    }
+
+    .dock-trigger:hover, .floating-dock.is-expanded .dock-trigger {
+      opacity: 1;
+      border-color: var(--neon-green);
+      box-shadow: 0 0 14px var(--neon-green-glow);
+      transform: scale(1.05);
+    }
+
+    .dock-btn:hover {
+      background: var(--neon-green-dim);
+      color: var(--neon-green);
+      border-color: var(--neon-green);
+      transform: translateY(-1px);
+    }
+
+    .dock-btn:focus-visible, .dock-trigger:focus-visible {
+      box-shadow: 0 0 0 3px var(--neon-green-glow);
+    }
+
+    /* Modal / Drawer Pengaturan & Log Akses */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 25, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.28s ease;
+    }
+
+    .modal-backdrop.is-open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      transform: translateY(16px);
+      transition: transform 0.28s ease;
+    }
+
+    .modal-backdrop.is-open .modal-panel {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-glass);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(11, 15, 25, 0.45);
+    }
+
+    .modal-header h3 {
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: var(--neon-green);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-close-modal {
+      background: transparent;
+      border: 1px solid var(--border-glass);
+      color: var(--text-muted);
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-close-modal:hover {
+      color: var(--text-main);
+      border-color: var(--neon-green);
+    }
+
+    .modal-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-glass);
+      background: rgba(11, 15, 25, 0.25);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 11px 12px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.is-active {
+      color: var(--neon-green);
+      border-bottom-color: var(--neon-green);
+      background: var(--neon-green-dim);
+    }
+
+    .modal-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-glass);
+      background: var(--bg-deep);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--neon-green);
+      box-shadow: 0 0 0 3px var(--neon-green-dim);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 11px 16px;
+      border-radius: 10px;
+      border: none;
+      background: var(--neon-green);
+      color: #0b0f19;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 0 18px var(--neon-green-glow);
+      transform: translateY(-1px);
+    }
+
+    /* Daftar Log dengan Infinite Scroll / Lazy Load */
+    .log-list {
+      max-height: 260px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      padding-right: 4px;
+    }
+
+    .log-item {
+      background: var(--bg-deep);
+      border: 1px solid var(--border-glass);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.78rem;
+    }
+
+    .log-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .log-id {
+      color: var(--neon-green);
+      font-weight: 700;
+      font-family: monospace;
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+    }
+
+    .log-note {
+      color: var(--text-main);
+      line-height: 1.35;
+    }
+
+    /* Toast Notifikasi Kustom (Anti-Alert Browser) */
+    .toast-container {
+      position: fixed;
+      bottom: 68px;
+      right: 16px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast-box {
+      background: var(--bg-glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--neon-green);
+      color: var(--text-main);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastSlideIn 0.25s ease forwards;
+    }
+
+    @keyframes toastSlideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Banner Indikator Koneksi Offline -->
+  <div id="networkBanner" class="network-banner">
+    <span>Koneksi internet terputus. Memunggu jaringan kembali aktif...</span>
+  </div>
+
+  <!-- Layar Loading (Preloader) Zettbos Theme -->
+  <div id="preloaderOverlay" class="preloader-overlay">
+    <div class="loader-card">
+      <div class="spinner-ring"></div>
+      <div>
+        <div id="loaderTitle" class="loader-title">Memuat Sistem Aplikasi...</div>
+        <div class="loader-sub">Menghubungkan ke server Google Apps Script secara aman.</div>
+      </div>
+      <button type="button" class="btn-skip-loader" onclick="hidePreloader()">Buka Layar Sekarang</button>
+    </div>
+  </div>
+
+  <!-- Container Iframe Utama Full-Screen -->
+  <main class="iframe-viewport">
+    <iframe
+      id="gasAppFrame"
+      src="https://script.google.com/macros/s/AKfycbyLEDMa60INdSe8_DeloMazKbTO3lRqIzfVz0EBnZW_wNt5wjbmTGvpEkozV2Keg6y0KA/exec"
+      title="Google Apps Script Web App Wrapper"
+      allow="clipboard-read; clipboard-write; geolocation; microphone; camera; fullscreen"
+      allowfullscreen>
+    </iframe>
+  </main>
+
+  <!-- Floating Quick Action Control (Pojok Kanan Bawah) -->
+  <div id="floatingDock" class="floating-dock">
+    <div class="dock-menu">
+      <button type="button" class="dock-btn" title="Muat Ulang Frame (Reload)" onclick="reloadIframeApp()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 2v6h-6"></path>
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+          <path d="M3 22v-6h6"></path>
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+        </svg>
+      </button>
+      <button type="button" class="dock-btn" title="Layar Penuh (Fullscreen)" onclick="toggleFullScreenMode()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        </svg>
+      </button>
+      <button type="button" class="dock-btn" title="Panel Konfigurasi & Log" onclick="openControlModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+    <button type="button" class="dock-trigger" title="Menu Kontrol Wrapper" onclick="toggleDockMenu()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Modal Konfigurasi Wrapper & Riwayat Log -->
+  <div id="controlModal" class="modal-backdrop">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3>
+          <span>⚡ Zettbos Wrapper Portal</span>
+        </h3>
+        <button type="button" class="btn-close-modal" onclick="closeControlModal()">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" id="tabBtnConfig" class="tab-btn is-active" onclick="switchModalTab('config')">Konfigurasi URL</button>
+        <button type="button" id="tabBtnLogs" class="tab-btn" onclick="switchModalTab('logs')">Log Akses</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tab 1: Form Pengaturan Wrapper -->
+        <div id="tabContentConfig">
+          <form id="wrapperConfigForm" onsubmit="event.preventDefault(); handleSaveWrapperConfig();">
+            <div class="form-group">
+              <label for="inputNamaAplikasi">Nama Portal Aplikasi</label>
+              <input type="text" id="inputNamaAplikasi" class="form-input" value="Zettbos Web App Portal" required>
+            </div>
+            <div class="form-group">
+              <label for="inputTitleTab">Judul Tab Browser (&lt;title&gt;)</label>
+              <input type="text" id="inputTitleTab" class="form-input" value="Web App Portal" required>
+            </div>
+            <div class="form-group">
+              <label for="inputTargetUrl">Target Google Apps Script URL (/exec)</label>
+              <input type="url" id="inputTargetUrl" class="form-input" value="https://script.google.com/macros/s/AKfycbyLEDMa60INdSe8_DeloMazKbTO3lRqIzfVz0EBnZW_wNt5wjbmTGvpEkozV2Keg6y0KA/exec" required>
+            </div>
+            <div class="form-group">
+              <label for="inputFaviconUrl">URL Ikon Favicon (Opsional)</label>
+              <input type="url" id="inputFaviconUrl" class="form-input" value="https://www.google.com/images/about/sheets-icon.svg">
+            </div>
+            <button type="submit" class="btn-primary">Terapkan & Simpan Konfigurasi</button>
+          </form>
+        </div>
+
+        <!-- Tab 2: Panel Log Akses dengan Lazy Loading & Backend Filtering -->
+        <div id="tabContentLogs" style="display: none;">
+          <div class="form-group" style="margin-bottom: 8px;">
+            <input type="text" id="inputSearchLog" class="form-input" placeholder="Cari ID Transaksi atau catatan log..." oninput="handleSearchLogInput()">
+          </div>
+          <div id="logListContainer" class="log-list" onscroll="handleLogScroll(this)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container Toast Notifikasi -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    /**
+     * ========================================================================
+     * ZETTBOT FRONTEND SCRIPT - SAFE DOM RENDERING & OPTIMISTIC UI
+     * ========================================================================
+     */
+    var APP_STATE = {
+      defaultExecUrl: 'https://script.google.com/macros/s/AKfycbyLEDMa60INdSe8_DeloMazKbTO3lRqIzfVz0EBnZW_wNt5wjbmTGvpEkozV2Keg6y0KA/exec',
+      currentUrl: 'https://script.google.com/macros/s/AKfycbyLEDMa60INdSe8_DeloMazKbTO3lRqIzfVz0EBnZW_wNt5wjbmTGvpEkozV2Keg6y0KA/exec',
+      namaAplikasi: 'Zettbos Web App Portal',
+      titleTab: 'Web App Portal',
+      faviconUrl: 'https://www.google.com/images/about/sheets-icon.svg',
+      logs: [],
+      logOffset: 0,
+      logLimit: 10,
+      logHasMore: false,
+      logLoading: false,
+      logKeyword: '',
+      searchTimer: null
+    };
+
+    window.addEventListener('DOMContentLoaded', function() {
+      initIframeListener();
+      initNetworkListeners();
+      loadInitialWrapperConfig();
+    });
+
+    /**
+     * Memantau event onload pada iframe utama
+     */
+    function initIframeListener() {
+      var iframeEl = document.getElementById('gasAppFrame');
+      if (!iframeEl) return;
+
+      iframeEl.addEventListener('load', function() {
+        hidePreloader();
+        triggerAccessLog('SUCCESS', 'Iframe Web App berhasil dimuat');
+      });
+
+      // Fallback otomatis jika dalam 5 detik onload tertahan oleh cross-origin policy
+      setTimeout(function() {
+        hidePreloader();
+      }, 5000);
+    }
+
+    /**
+     * Menyembunyikan layar preloader secara halus
+     */
+    function hidePreloader() {
+      var preloader = document.getElementById('preloaderOverlay');
+      if (preloader && !preloader.classList.contains('is-hidden')) {
+        preloader.classList.add('is-hidden');
+      }
+    }
+
+    /**
+     * Menampilkan layar preloader saat berganti URL atau reload
+     */
+    function showPreloader(messageText) {
+      var preloader = document.getElementById('preloaderOverlay');
+      var titleEl = document.getElementById('loaderTitle');
+      if (titleEl && messageText) {
+        titleEl.textContent = messageText;
+      }
+      if (preloader) {
+        preloader.classList.remove('is-hidden');
+      }
+    }
+
+    /**
+     * Memantau status jaringan Online / Offline
+     */
+    function initNetworkListeners() {
+      var banner = document.getElementById('networkBanner');
+      window.addEventListener('offline', function() {
+        if (banner) banner.classList.add('is-visible');
+        showToast('Perangkat Anda sedang offline.');
+      });
+      window.addEventListener('online', function() {
+        if (banner) banner.classList.remove('is-visible');
+        showToast('Koneksi internet kembali terhubung.');
+      });
+    }
+
+    /**
+     * Memuat konfigurasi dari Google Sheets (jika berjalan di GAS) atau memakai konfigurasi default
+     */
+    function loadInitialWrapperConfig() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.status === 'success' && res.data) {
+              applyConfigToDOM(res.data, false);
+            }
+          })
+          .withFailureHandler(function() {
+            // Tetap berjalan menggunakan URL default tanpa mengganggu user
+          })
+          .getWrapperConfig();
+      }
+    }
+
+    /**
+     * Menerapkan konfigurasi ke elemen DOM secara instan (Optimistic UI)
+     */
+    function applyConfigToDOM(configObj, forceReloadFrame) {
+      var newTitle = String(configObj.titleTab || 'Web App Portal');
+      var newAppName = String(configObj.namaAplikasi || 'Zettbos Web App Portal');
+      var newUrl = String(configObj.targetUrl || APP_STATE.defaultExecUrl);
+      var newFavicon = String(configObj.faviconUrl || '');
+
+      document.title = newTitle;
+      var pageFavicon = document.getElementById('pageFavicon');
+      if (pageFavicon && newFavicon) {
+        pageFavicon.setAttribute('href', newFavicon);
+      }
+
+      var inputNama = document.getElementById('inputNamaAplikasi');
+      var inputTitle = document.getElementById('inputTitleTab');
+      var inputUrl = document.getElementById('inputTargetUrl');
+      var inputFav = document.getElementById('inputFaviconUrl');
+
+      if (inputNama) inputNama.value = newAppName;
+      if (inputTitle) inputTitle.value = newTitle;
+      if (inputUrl) inputUrl.value = newUrl;
+      if (inputFav) inputFav.value = newFavicon;
+
+      var iframeEl = document.getElementById('gasAppFrame');
+      if (iframeEl && (forceReloadFrame || APP_STATE.currentUrl !== newUrl)) {
+        APP_STATE.currentUrl = newUrl;
+        showPreloader('Memuat Ulang Portal...');
+        iframeEl.src = newUrl;
+      }
+
+      APP_STATE.namaAplikasi = newAppName;
+      APP_STATE.titleTab = newTitle;
+      APP_STATE.faviconUrl = newFavicon;
+    }
+
+    /**
+     * Menyimpan perubahan konfigurasi dengan Optimistic UI
+     */
+    function handleSaveWrapperConfig() {
+      // Ekstrak elemen DOM menjadi tipe data primitif murni
+      var namaAplikasi = String(document.getElementById('inputNamaAplikasi').value || '').trim();
+      var titleTab = String(document.getElementById('inputTitleTab').value || '').trim();
+      var targetUrl = String(document.getElementById('inputTargetUrl').value || '').trim();
+      var faviconUrl = String(document.getElementById('inputFaviconUrl').value || '').trim();
+
+      if (!targetUrl) {
+        showToast('URL eksekusi tidak boleh kosong.');
+        return;
+      }
+
+      var optimisticData = {
+        namaAplikasi: namaAplikasi,
+        titleTab: titleTab,
+        targetUrl: targetUrl,
+        faviconUrl: faviconUrl
+      };
+
+      // Update tampilan secara lokal terlebih dahulu (Optimistic UI)
+      var urlChanged = (targetUrl !== APP_STATE.currentUrl);
+      applyConfigToDOM(optimisticData, urlChanged);
+      closeControlModal();
+      showToast('Konfigurasi pembungkus berhasil diterapkan!');
+
+      // Sinkronisasi ke backend jika berada di ekosistem Apps Script
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.status === 'error') {
+              showToast(res.message);
+            }
+          })
+          .withFailureHandler(function(err) {
+            showToast('Gagal sinkronisasi ke Sheet: ' + err.message);
+          })
+          .saveWrapperConfig(optimisticData);
+      }
+    }
+
+    /**
+     * Muat ulang (Refresh) Iframe secara cepat
+     */
+    function reloadIframeApp() {
+      var iframeEl = document.getElementById('gasAppFrame');
+      if (!iframeEl) return;
+
+      showPreloader('Menyegarkan Sesi Aplikasi...');
+      var target = APP_STATE.currentUrl || APP_STATE.defaultExecUrl;
+      iframeEl.src = target;
+      showToast('Memuat ulang frame aplikasi...');
+
+      setTimeout(function() {
+        hidePreloader();
+      }, 4000);
+    }
+
+    /**
+     * Mengaktifkan atau menonaktifkan mode Layar Penuh (Fullscreen)
+     */
+    function toggleFullScreenMode() {
+      var docEl = document.documentElement;
+      if (!document.fullscreenElement) {
+        if (docEl.requestFullscreen) {
+          docEl.requestFullscreen();
+        }
+        showToast('Mode layar penuh diaktifkan.');
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+        showToast('Keluar dari mode layar penuh.');
+      }
+    }
+
+    /**
+     * Membuka / menutup menu floating dock di pojok kanan bawah
+     */
+    function toggleDockMenu() {
+      var dock = document.getElementById('floatingDock');
+      if (dock) {
+        dock.classList.toggle('is-expanded');
+      }
+    }
+
+    /**
+     * Membuka modal konfigurasi & riwayat log
+     */
+    function openControlModal() {
+      var modal = document.getElementById('controlModal');
+      if (modal) {
+        modal.classList.add('is-open');
+      }
+    }
+
+    /**
+     * Menutup modal konfigurasi
+     */
+    function closeControlModal() {
+      var modal = document.getElementById('controlModal');
+      if (modal) {
+        modal.classList.remove('is-open');
+      }
+    }
+
+    /**
+     * Berpindah antar-tab di dalam modal
+     */
+    function switchModalTab(tabName) {
+      var btnConfig = document.getElementById('tabBtnConfig');
+      var btnLogs = document.getElementById('tabBtnLogs');
+      var contentConfig = document.getElementById('tabContentConfig');
+      var contentLogs = document.getElementById('tabContentLogs');
+
+      if (tabName === 'logs') {
+        btnConfig.classList.remove('is-active');
+        btnLogs.classList.add('is-active');
+        contentConfig.style.display = 'none';
+        contentLogs.style.display = 'block';
+        fetchLogsFromServer(true);
+      } else {
+        btnLogs.classList.remove('is-active');
+        btnConfig.classList.add('is-active');
+        contentLogs.style.display = 'none';
+        contentConfig.style.display = 'block';
+      }
+    }
+
+    /**
+     * Mencatat log akses secara Optimistic UI dan sinkron ke Sheet
+     */
+    function triggerAccessLog(statusLoad, catatanText) {
+      var nowFormatted = new Date().toLocaleString('id-ID');
+      var userAgentStr = String(navigator.userAgent || 'Web Browser').slice(0, 120);
+      var localEntry = {
+        idTransaksi: 'CUST-LOCAL',
+        waktuAkses: nowFormatted,
+        userAgent: userAgentStr,
+        statusLoad: String(statusLoad || 'SUCCESS'),
+        catatan: String(catatanText || 'Memuat portal wrapper')
+      };
+
+      APP_STATE.logs.unshift(localEntry);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.status === 'success' && res.data) {
+              localEntry.idTransaksi = res.data.idTransaksi;
+              localEntry.waktuAkses = res.data.waktuAkses;
+            }
+          })
+          .recordAccessLog({
+            userAgent: userAgentStr,
+            statusLoad: String(statusLoad || 'SUCCESS'),
+            catatan: String(catatanText || 'Memuat portal wrapper')
+          });
+      }
+    }
+
+    /**
+     * Pencarian riwayat log dengan debounce (Backend Filtering)
+     */
+    function handleSearchLogInput() {
+      var inputEl = document.getElementById('inputSearchLog');
+      var kw = inputEl ? String(inputEl.value || '').trim() : '';
+      APP_STATE.logKeyword = kw;
+
+      if (APP_STATE.searchTimer) {
+        clearTimeout(APP_STATE.searchTimer);
+      }
+      APP_STATE.searchTimer = setTimeout(function() {
+        fetchLogsFromServer(true);
+      }, 300);
+    }
+
+    /**
+     * Infinite Scroll handler untuk daftar log (Lazy Loading)
+     */
+    function handleLogScroll(containerEl) {
+      if (!containerEl || APP_STATE.logLoading || !APP_STATE.logHasMore) return;
+      var nearBottom = (containerEl.scrollTop + containerEl.clientHeight) >= (containerEl.scrollHeight - 24);
+      if (nearBottom) {
+        fetchLogsFromServer(false);
+      }
+    }
+
+    /**
+     * Mengambil data log dengan Server-Side Pagination
+     */
+    function fetchLogsFromServer(resetList) {
+      if (resetList) {
+        APP_STATE.logOffset = 0;
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        APP_STATE.logLoading = true;
+        var reqParams = {
+          limit: APP_STATE.logLimit,
+          offset: APP_STATE.logOffset,
+          keyword: APP_STATE.logKeyword
+        };
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            APP_STATE.logLoading = false;
+            if (res && res.status === 'success') {
+              if (resetList) {
+                APP_STATE.logs = res.items || [];
+              } else {
+                APP_STATE.logs = APP_STATE.logs.concat(res.items || []);
+              }
+              APP_STATE.logHasMore = Boolean(res.hasMore);
+              APP_STATE.logOffset = APP_STATE.logs.length;
+              renderLogItems();
+            }
+          })
+          .withFailureHandler(function() {
+            APP_STATE.logLoading = false;
+            renderLogItems();
+          })
+          .getAccessLogsPaginated(reqParams);
+      } else {
+        // Mode Preview Canvas / File HTML Mandiri
+        renderLogItems();
+      }
+    }
+
+    /**
+     * Merender daftar log menggunakan String Concatenation klasik (Tanpa Nested Template Literals)
+     */
+    function renderLogItems() {
+      var container = document.getElementById('logListContainer');
+      if (!container) return;
+
+      var keywordLower = APP_STATE.logKeyword.toLowerCase();
+      var listToRender = [];
+
+      for (var i = 0; i < APP_STATE.logs.length; i++) {
+        var item = APP_STATE.logs[i];
+        var combined = (item.idTransaksi + ' ' + item.catatan + ' ' + item.waktuAkses).toLowerCase();
+        if (keywordLower === '' || combined.indexOf(keywordLower) !== -1) {
+          listToRender.push(item);
+        }
+      }
+
+      if (listToRender.length === 0) {
+        container.innerHTML = '<div class="log-item"><div class="log-note">Belum ada riwayat aktivitas yang cocok.</div></div>';
+        return;
+      }
+
+      var htmlStr = '';
+      for (var j = 0; j < listToRender.length; j++) {
+        var row = listToRender[j];
+        htmlStr += '<div class="log-item">' +
+          '<div class="log-item-top">' +
+            '<span class="log-id">' + escapeHtmlStr(row.idTransaksi) + '</span>' +
+            '<span class="log-time">' + escapeHtmlStr(row.waktuAkses) + '</span>' +
+          '</div>' +
+          '<div class="log-note">' + escapeHtmlStr(row.catatan) + ' (' + escapeHtmlStr(row.statusLoad) + ')</div>' +
+        '</div>';
+      }
+
+      container.innerHTML = htmlStr;
+    }
+
+    /**
+     * Helper sanitasi karakter HTML untuk keamanan DOM
+     */
+    function escapeHtmlStr(str) {
+      var text = String(str || '');
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    /**
+     * Menampilkan popup Toast kustom (Tanpa alert bawaan browser)
+     */
+    function showToast(message) {
+      var container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      var toastEl = document.createElement('div');
+      toastEl.className = 'toast-box';
+      toastEl.innerHTML = '<span>⚡</span><span>' + escapeHtmlStr(message) + '</span>';
+      container.appendChild(toastEl);
+
+      setTimeout(function() {
+        if (toastEl && toastEl.parentNode) {
+          toastEl.parentNode.removeChild(toastEl);
+        }
+      }, 3200);
+    }
+  </script>
+</body>
+</html>
